@@ -1,0 +1,3 @@
+html2dash
+sphinx-click==4.4.0
+furo==2023.3.27

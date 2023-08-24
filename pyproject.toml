@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "html2dash"
+dynamic = ["version"]
+description = "Convert an HTML layout to a plotly dash layout"
+authors = [{ name = "Najeem Muhammed", email = "najeem@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.7"
+license = { file = "LICENSE" }
+keywords = ["dash", "plotly", "html"]
+dependencies = ["dash"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+test = ["pytest", "coverage"]
+
+[project.urls]
+"Homepage" = "https://github.com/idling-mind/html2dash"
+"Bug Tracker" = "https://github.com/idling-mind/html2dash/issues"
+
+[tool.setuptools.dynamic]
+version = { attr = "html2dash.__version__" }
