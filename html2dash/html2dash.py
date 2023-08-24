@@ -31,6 +31,10 @@ def fix_attrs(attrs: dict) -> dict:
             return_attrs["className"] = " ".join(v)
         elif k == "style":
             return_attrs[k] = v
+        elif k == "for":
+            return_attrs["htmlFor"] = v
+        elif isinstance(v, list):
+            return_attrs[k] = " ".join(v)
         else:
             return_attrs[fix_hyphenated_attr(k)] = v
     return return_attrs
