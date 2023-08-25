@@ -27,7 +27,10 @@ def parse_element(tag: element.Tag, fallback=None):
     elif isinstance(tag, Comment):
         return None
     elif isinstance(tag, element.NavigableString):
-        return str(tag).strip()
+        text = str(tag)
+        if text.strip():
+            return text
+        return None
     attrs = {k: v for k, v in tag.attrs.items()}
     attrs = fix_attrs(attrs)
     children = []
