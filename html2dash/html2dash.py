@@ -2,8 +2,13 @@ from bs4 import BeautifulSoup, element, Comment
 from dash import html, dcc
 import re
 import logging
+import json
 
-element_modules = [html, dcc]
+settings = {
+    "modules": [html, dcc],
+    "element-map": {
+    },
+}
 
 
 def html2dash(html_str: str, fallback=None) -> html.Div:
@@ -32,7 +37,10 @@ def parse_element(tag: element.Tag, fallback=None):
             children.append(child_object)
     if children:
         attrs["children"] = children
-    for module in element_modules:
+    for module in settings["modules"]:
+        mapped_element = settings["element-map"].get(tag.name)
+        if mapped_element is not None:
+            return mapped_element(**attrs)
         if hasattr(module, tag.name.title()):
             return getattr(module, tag.name.title())(**attrs)
     logging.warning(
@@ -61,7 +69,10 @@ def fix_attrs(attrs: dict) -> dict:
         elif isinstance(v, list):
             return_attrs[k] = " ".join(v)
         else:
-            return_attrs[fix_hyphenated_attr(k)] = v
+            try:
+                return_attrs[fix_hyphenated_attr(k)] = json.loads(v)
+            except Exception:
+                return_attrs[fix_hyphenated_attr(k)] = v
     return return_attrs
 
 

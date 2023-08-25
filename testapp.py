@@ -1,6 +1,12 @@
 from pathlib import Path
 from dash import Dash, callback, Input, Output, State
-from html2dash import html2dash
+from html2dash import html2dash, settings
+import dash_mantine_components as dmc
+from dash_iconify import DashIconify
+
+settings["modules"].append(dmc)
+settings["element-map"]["icon"] = DashIconify
+settings["element-map"]["rprogress"] = dmc.RingProgress
 
 app = Dash(
     __name__,
@@ -14,6 +20,14 @@ app = Dash(
 
 app.layout = html2dash(Path("layout.html").read_text())
 
+@callback(
+    Output("checkbox_output", "children"),
+    Input("checkbox", "checked"),
+)
+def checkbox_output(checked):
+    if checked:
+        return f"Checkbox is {checked}"
+    return f"Checkbox is {checked}"
 
 if __name__ == "__main__":
     app.run_server(debug=True)
