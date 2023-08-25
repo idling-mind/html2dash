@@ -11,17 +11,13 @@ settings = {
 }
 
 
-def html2dash(html_str: str, fallback=None) -> html.Div:
-    if fallback is None:
-        fallback = []
+def html2dash(html_str: str) -> html.Div:
     soup = BeautifulSoup(html_str, "html.parser")
-    children = [parse_element(child, fallback) for child in soup.children]
+    children = [parse_element(child) for child in soup.children]
     return html.Div(children=children)
 
 
-def parse_element(tag: element.Tag, fallback=None):
-    if fallback is None:
-        fallback = []
+def parse_element(tag: element.Tag):
     if tag is None:
         return str(tag)
     elif isinstance(tag, Comment):
