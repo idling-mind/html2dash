@@ -10,6 +10,12 @@ settings = {
     },
 }
 
+ATTRIBUTE_MAP = {
+    "for": "htmlFor",
+    "autocomplete": "autoComplete",
+    "tabindex": "tabIndex",
+    "novalidate": "noValidate",
+}
 
 def html2dash(html_str: str) -> html.Div:
     soup = BeautifulSoup(html_str, "html.parser")
@@ -51,18 +57,14 @@ def parse_element(tag: element.Tag):
 def fix_attrs(attrs: dict) -> dict:
     return_attrs = {}
     for k, v in attrs.items():
+        if v in ["true", "false"]:
+            v = eval(v.title())
         if k == "class":
             return_attrs["className"] = " ".join(v)
         elif k == "style":
             return_attrs[k] = style_str_to_dict(v)
-        elif k == "for":
-            return_attrs["htmlFor"] = v
-        elif k == "autocomplete":
-            return_attrs["autoComplete"] = v
-        elif k == "tabindex":
-            return_attrs["tabIndex"] = v
-        elif k == "novalidate":
-            return_attrs["noValidate"] = bool(v)
+        elif k in ATTRIBUTE_MAP:
+            return_attrs[ATTRIBUTE_MAP[k]] = v
         elif k.startswith("data-") or k.startswith("aria-"):
             return_attrs[k] = v
         elif isinstance(v, list):
