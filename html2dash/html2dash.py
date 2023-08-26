@@ -4,21 +4,27 @@ import re
 import logging
 import json
 
+logger = logging.getLogger(__name__)
+
 settings = {
     "modules": [html, dcc],
-    "element-map": {
-    },
+    "element-map": {},
 }
 
 ATTRIBUTE_MAP = {
-    "for": "htmlFor",
     "autocomplete": "autoComplete",
-    "tabindex": "tabIndex",
+    "autofocus": "autoFocus",
+    "class": "className",
+    "for": "htmlFor",
+    "maxlength": "maxLength",
+    "minlength": "minLength",
     "novalidate": "noValidate",
+    "tabindex": "tabIndex",
 }
 
+
 def html2dash(html_str: str) -> html.Div:
-    soup = BeautifulSoup(html_str, "html.parser")
+    soup = BeautifulSoup(html_str, "xml")
     children = [parse_element(child) for child in soup.children]
     return html.Div(children=children)
 
@@ -46,11 +52,12 @@ def parse_element(tag: element.Tag):
         mapped_element = settings["element-map"].get(tag.name)
         if mapped_element is not None:
             return mapped_element(**attrs)
-        if hasattr(module, tag.name.title()):
+        elif hasattr(module, tag.name):
+            return getattr(module, tag.name)(**attrs)
+        elif hasattr(module, tag.name.title()):
             return getattr(module, tag.name.title())(**attrs)
-    logging.warning(
-        f"Could not find the element '{tag.name}'"
-        f" in any of the modules."
+    logger.warning(
+        f"Could not find the element '{tag.name}'" f" in any of the modules."
     )
 
 
@@ -59,9 +66,7 @@ def fix_attrs(attrs: dict) -> dict:
     for k, v in attrs.items():
         if v in ["true", "false"]:
             v = eval(v.title())
-        if k == "class":
-            return_attrs["className"] = " ".join(v)
-        elif k == "style":
+        if k == "style":
             return_attrs[k] = style_str_to_dict(v)
         elif k in ATTRIBUTE_MAP:
             return_attrs[ATTRIBUTE_MAP[k]] = v
