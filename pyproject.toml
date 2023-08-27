@@ -11,7 +11,7 @@ readme = "README.md"
 requires-python = ">=3.7"
 license = { file = "LICENSE" }
 keywords = ["dash", "plotly", "html"]
-dependencies = ["dash"]
+dependencies = ["dash", "beautifulsoup4", "lxml"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

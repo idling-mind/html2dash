@@ -1,3 +1,13 @@
+"""html2dash
+
+Converts HTML to Dash components.
+
+Usage:
+    from html2dash import html2dash, settings
+    settings["modules"] = [html, dcc] + settings["modules"]
+    app.layout = html2dash(Path("layout.html").read_text())
+
+"""
 from bs4 import BeautifulSoup, element, Comment
 from dash import html, dcc
 import re
@@ -15,29 +25,46 @@ ATTRIBUTE_MAP = {
     "autocomplete": "autoComplete",
     "autofocus": "autoFocus",
     "class": "className",
+    "colspan": "colSpan",
     "for": "htmlFor",
     "maxlength": "maxLength",
     "minlength": "minLength",
     "novalidate": "noValidate",
+    "readonly": "readOnly",
+    "rowspan": "rowSpan",
     "tabindex": "tabIndex",
 }
 
 
 def html2dash(html_str: str) -> html.Div:
     soup = BeautifulSoup(html_str, "xml")
+    if soup.body is not None:
+        soup = soup.body
     children = [parse_element(child) for child in soup.children]
     return html.Div(children=children)
 
 
 def parse_element(tag: element.Tag):
-    if tag is None:
-        return str(tag)
-    elif isinstance(tag, Comment):
+    if tag is None or isinstance(tag, Comment):
         return None
     elif isinstance(tag, element.NavigableString):
         text = str(tag)
         if text.strip():
             return text
+        return None
+    dash_element = None
+    for module in settings["modules"]:
+        mapped_element = settings["element-map"].get(tag.name)
+        if mapped_element is not None:
+            dash_element = mapped_element
+        elif hasattr(module, tag.name):
+            dash_element = getattr(module, tag.name)
+        elif hasattr(module, tag.name.title()):
+            dash_element = getattr(module, tag.name.title())
+    if not dash_element:
+        logger.warning(
+            f"Could not find the element '{tag.name}'" f" in any of the modules."
+        )
         return None
     attrs = {k: v for k, v in tag.attrs.items()}
     attrs = fix_attrs(attrs)
@@ -48,17 +75,7 @@ def parse_element(tag: element.Tag):
             children.append(child_object)
     if children:
         attrs["children"] = children
-    for module in settings["modules"]:
-        mapped_element = settings["element-map"].get(tag.name)
-        if mapped_element is not None:
-            return mapped_element(**attrs)
-        elif hasattr(module, tag.name):
-            return getattr(module, tag.name)(**attrs)
-        elif hasattr(module, tag.name.title()):
-            return getattr(module, tag.name.title())(**attrs)
-    logger.warning(
-        f"Could not find the element '{tag.name}'" f" in any of the modules."
-    )
+    return dash_element(**attrs)
 
 
 def fix_attrs(attrs: dict) -> dict:
@@ -75,9 +92,12 @@ def fix_attrs(attrs: dict) -> dict:
         elif isinstance(v, list):
             return_attrs[k] = " ".join(v)
         else:
-            try:
-                return_attrs[fix_hyphenated_attr(k)] = json.loads(v)
-            except Exception:
+            if isinstance(v, str) and any([s in v for s in ["{", "["]]):
+                try:
+                    return_attrs[fix_hyphenated_attr(k)] = json.loads(v)
+                except Exception:
+                    return_attrs[fix_hyphenated_attr(k)] = v
+            else:
                 return_attrs[fix_hyphenated_attr(k)] = v
     return return_attrs
 
