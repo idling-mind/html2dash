@@ -10,12 +10,18 @@ following.
 
 - For larger layouts, the python code becomes very long and hard to read.
 - Cannot copy paste html code from examples on the web.
-- Python's 4 space indentation makes the layout code shift a lot to the right
-  and look ugly.
 - Cannot use tools like emmet to generate html code.
 
 html2dash solves these problems by allowing you to write your dash layout in
 html/xml form. It converts the html/xml code to equivalent dash layout code.
+
+## Installation
+
+```bash
+git clone https://github.com/idling-mind/html2dash.git
+cd html2dash
+pip install .
+```
 
 ## Examples
 
