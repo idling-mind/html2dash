@@ -12,6 +12,7 @@ following.
 - Cannot copy paste html code from examples on the web.
 - Python's 4 space indentation makes the layout code shift a lot to the right
   and look ugly.
+- Cannot use tools like emmet to generate html code.
 
 html2dash solves these problems by allowing you to write your dash layout in
 html/xml form. It converts the html/xml code to equivalent dash layout code.
@@ -137,3 +138,29 @@ layout = html2dash("""
 </div>
 """)
 ```
+
+## Case sensitivity of html tags
+
+html tags are case insensitive. So, `<div>` and `<DIV>` are equivalent. But,
+html2dash is partly case sensitive. For any tag, it first tries to find the tag
+with the given case. If it does not find the tag, it tries to find the tag with
+the first letter capitalized.
+
+For example, if you have the following layout:
+
+```python
+layout = html2dash("""
+<div>
+    <h1>Hello World</h1>
+    <p>This is a paragraph</p>
+    <input id="my-input" value="Hello World"/>
+</div>
+""")
+```
+
+The following will be the sequence of searches:
+
+1. Search for `input` in `dash.html` >> Not found
+2. Search for `Input` in `dash.html` >> Not found
+3. Search for `input` in `dash.dcc` >> Not found
+4. Search for `Input` in `dash.dcc` >> Found
