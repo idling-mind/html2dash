@@ -22,29 +22,5 @@ app = Dash(
 
 app.layout = html2dash(Path("tabler.html").read_text())
 
-# @callback(
-#     Output("checkbox_output", "children"),
-#     Input("checkbox", "checked"),
-# )
-# def checkbox_output(checked):
-#     if checked:
-#         return f"Checkbox is {checked}"
-#     return f"Checkbox is {checked}"
-
-# @callback(
-#     Output("lprogress", "sections"),
-#     Input("button", "n_clicks"),
-# )
-# def lprogress(n_clicks):
-#     if not n_clicks:
-#         return [
-#             {"value": 10, "color": "blue", "tooltip": "10 blue"},
-#         ]
-#     return [
-#         {"value": 10, "color": "blue", "tooltip": "10 blue"},
-#         {"value": 10, "color": "green", "tooltip": "10 green"},
-#         {"value": 20, "color": "yellow", "tooltip": "20 yellow"},
-#     ]
-
 if __name__ == "__main__":
     app.run_server(debug=True)
