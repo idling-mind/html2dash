@@ -164,7 +164,8 @@ layout = html2dash("""
 """)
 ```
 
-The following will be the sequence of searches:
+In the above, all tags except `input` are found in `dash.html` module. 
+And for input tag, the following will be the sequence of searches:
 
 1. Search for `input` in `dash.html` >> Not found
 2. Search for `Input` in `dash.html` >> Not found
