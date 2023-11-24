@@ -79,9 +79,12 @@ def parse_element(tag: element.Tag):
         try:
             return dash_element(**attrs)
         except TypeError as e:
-            print(e)
             match = re.search(r"received an unexpected keyword argument: `(.*)`", str(e))
             attrs.pop(match.group(1))
+            logger.warning(
+                f"Removed the attribute '{match.group(1)}' from the element '{tag.name}'"
+                f" because it was not valid."
+            )
 
 
 
