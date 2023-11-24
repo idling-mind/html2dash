@@ -75,7 +75,14 @@ def parse_element(tag: element.Tag):
             children.append(child_object)
     if children:
         attrs["children"] = children
-    return dash_element(**attrs)
+    while True:
+        try:
+            return dash_element(**attrs)
+        except TypeError as e:
+            print(e)
+            match = re.search(r"received an unexpected keyword argument: `(.*)`", str(e))
+            attrs.pop(match.group(1))
+
 
 
 def fix_attrs(attrs: dict) -> dict:
