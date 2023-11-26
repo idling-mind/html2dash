@@ -20,9 +20,7 @@ html/xml form. It converts the html/xml code to equivalent dash layout code.
 ## Installation
 
 ```bash
-git clone https://github.com/idling-mind/html2dash.git
-cd html2dash
-pip install .
+pip install html2dash
 ```
 
 ## Examples
@@ -145,6 +143,54 @@ layout = html2dash("""
     <icon icon="mdi:home"/>
 </div>
 """)
+```
+
+## Display a pandas dataframe in dash
+
+Since pandas dataframes come with a `to_html` method, you can easily display
+them in dash using `html2dash`.
+
+```python
+import pandas as pd
+from html2dash import html2dash
+
+df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+layout = html2dash(df.to_html())
+```
+
+If you want to use `dash_mantine_components` to display the dataframe, you can
+do the following.
+
+```python
+import pandas as pd
+from html2dash import html2dash, settings
+import dash_mantine_components as dmc
+
+# <table> would have been mapped to dash.html.Table
+# But, we want to use dmc.Table instead.
+settings["element-map"]["table"] = dmc.Table
+
+df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+layout = html2dash(df.to_html())
+```
+
+`html2dash` can handle multi-index dataframes as well.
+
+```python
+import pandas as pd
+from html2dash import html2dash, settings
+import dash_mantine_components as dmc
+
+settings["element-map"]["table"] = dmc.Table
+
+df = pd.DataFrame(
+    {
+        ("a", "b"): [1, 2, 3],
+        ("a", "c"): [4, 5, 6],
+        ("d", "e"): [7, 8, 9],
+    }
+)
+layout = html2dash(df.to_html())
 ```
 
 ## Case sensitivity of html tags
