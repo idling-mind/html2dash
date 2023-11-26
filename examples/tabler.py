@@ -1,5 +1,5 @@
 from pathlib import Path
-from dash import Dash, callback, Input, Output, State
+from dash import Dash
 from html2dash import html2dash, settings
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
