@@ -16,11 +16,6 @@ import json
 
 logger = logging.getLogger(__name__)
 
-settings = {
-    "modules": [html, dcc],
-    "element-map": {},
-}
-
 ATTRIBUTE_MAP = {
     "autocomplete": "autoComplete",
     "autofocus": "autoFocus",
@@ -36,15 +31,59 @@ ATTRIBUTE_MAP = {
 }
 
 
-def html2dash(html_str: str) -> html.Div:
+def html2dash(
+    html_str: str,
+    module_list: list | None = None,
+    element_map: dict[str, object] | None = None,
+    parent_div: bool = True,
+    on_missing_element: str = "warn",
+    on_missing_attribute: str = "warn",
+) -> html.Div | list[object]:
+    """Convert the HTML string to dash components.
+
+    Args:
+        html_str (str): The HTML string to convert.
+        module_list (list, optional): A list of modules to search for elements.
+            Defaults to [html, dcc]. 
+        element_map (dict, optional): A dictionary mapping HTML elements to dash
+            components. Defaults to {}.
+        on_missing_element (str, optional): What to do when an element is not found.
+            Defaults to "warn". Can be "warn", "raise", or "ignore".
+        on_missing_attribute (str, optional): What to do when an attribute is not found.
+            Defaults to "warn". Can be "warn", "raise", or "ignore".
+
+    Returns:
+        html.Div: The converted Dash components enclosed inside a html.Div object.
+    """
     soup = BeautifulSoup(html_str, "xml")
     if soup.body is not None:
         soup = soup.body
-    children = [parse_element(child) for child in soup.children]
-    return html.Div(children=children)
+    if module_list is None:
+        module_list = [html, dcc]
+    if element_map is None:
+        element_map = {}
+    settings = {
+        "module-list": module_list,
+        "element-map": element_map,
+        "on-missing-element": on_missing_element,
+        "on-missing-attribute": on_missing_attribute,
+    }
+    children = [parse_element(child, **settings) for child in soup.children]
+    if parent_div:
+        return html.Div(children=children)
+    return children
 
 
-def parse_element(tag: element.Tag):
+def parse_element(tag: element.Tag, **settings) -> object:
+    """Parse the HTML element and return the Dash component.
+
+    Args:
+        tag (element.Tag): The HTML element to parse.
+        settings (dict): The settings to use.
+
+    Returns:
+        object: The Dash component.
+    """
     if tag is None or isinstance(tag, Comment):
         return None
     elif isinstance(tag, element.NavigableString):
@@ -53,7 +92,7 @@ def parse_element(tag: element.Tag):
             return text
         return None
     dash_element = None
-    for module in settings["modules"]:
+    for module in settings["module-list"]:
         mapped_element = settings["element-map"].get(tag.name)
         if mapped_element is not None:
             dash_element = mapped_element
@@ -62,15 +101,20 @@ def parse_element(tag: element.Tag):
         elif hasattr(module, tag.name.title()):
             dash_element = getattr(module, tag.name.title())
     if not dash_element:
-        logger.warning(
-            f"Could not find the element '{tag.name}'" f" in any of the modules."
-        )
+        if settings["on-missing-element"] == "warn":
+            logger.warning(
+                f"Could not find the element '{tag.name}'" f" in any of the modules."
+            )
+        elif settings["on-missing-element"] == "raise":
+            raise ValueError(
+                f"Could not find the element '{tag.name}'" f" in any of the modules."
+            )
         return None
     attrs = {k: v for k, v in tag.attrs.items()}
     attrs = fix_attrs(attrs)
     children = []
     for child in tag.children:
-        child_object = parse_element(child)
+        child_object = parse_element(child, **settings)
         if child_object is not None:
             children.append(child_object)
     if children:
@@ -79,16 +123,30 @@ def parse_element(tag: element.Tag):
         try:
             return dash_element(**attrs)
         except TypeError as e:
-            match = re.search(r"received an unexpected keyword argument: `(.*)`", str(e))
-            attrs.pop(match.group(1))
-            logger.warning(
-                f"Removed the attribute '{match.group(1)}' from the element '{tag.name}'"
-                f" because it was not valid."
+            match = re.search(
+                r"received an unexpected keyword argument: `(.*)`", str(e)
             )
-
+            attrs.pop(match.group(1))
+            if settings["on-missing-attribute"] == "warn":
+                logger.warning(
+                    f"Removed the attribute '{match.group(1)}' from the element '{tag.name}'"
+                    f" because it was not valid."
+                )
+            elif settings["on-missing-attribute"] == "raise":
+                raise ValueError(
+                    f"Unrecognized attribute '{match.group(1)}' in the element '{tag.name}'"
+                )
 
 
 def fix_attrs(attrs: dict) -> dict:
+    """Fix the attributes to be valid Dash attributes.
+
+    Args:
+        attrs (dict): The attributes to fix.
+
+    Returns:
+        dict: The fixed attributes.
+    """
     return_attrs = {}
     for k, v in attrs.items():
         if v in ["true", "false"]:
@@ -113,11 +171,26 @@ def fix_attrs(attrs: dict) -> dict:
 
 
 def fix_hyphenated_attr(attr: str) -> str:
+    """Fix the hyphenated attribute to be camel case.
+
+    Args:
+        attr (str): The attribute to fix.
+
+    Returns:
+        str: The fixed attribute.
+    """
     return re.sub(r"-(\w)", lambda m: m.group(1).upper(), attr)
 
 
 def style_str_to_dict(style_str: str) -> dict:
-    """Convert the style string to a dictionary."""
+    """Convert the style string to a dictionary.
+    
+    Args:
+        style_str (str): The style string to convert.
+
+    Returns:
+        dict: The converted style dictionary.
+    """
     style_dict = {}
     for item in style_str.split(";"):
         if ":" in item:
