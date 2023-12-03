@@ -43,7 +43,7 @@ def html2dash(
     Args:
         html_str (str): The HTML string to convert.
         module_list (list, optional): A list of modules to search for elements.
-            Defaults to [html, dcc]. 
+            Defaults to [html, dcc].
         element_map (dict, optional): A dictionary mapping HTML elements to dash
             components. Defaults to {}.
         on_missing_element (str, optional): What to do when an element is not found.
@@ -183,7 +183,7 @@ def fix_hyphenated_attr(attr: str) -> str:
 
 def style_str_to_dict(style_str: str) -> dict:
     """Convert the style string to a dictionary.
-    
+
     Args:
         style_str (str): The style string to convert.
 
