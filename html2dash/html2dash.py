@@ -3,8 +3,7 @@
 Converts HTML to Dash components.
 
 Usage:
-    from html2dash import html2dash, settings
-    settings["modules"] = [html, dcc] + settings["modules"]
+    from html2dash import html2dash
     app.layout = html2dash(Path("layout.html").read_text())
 
 """
