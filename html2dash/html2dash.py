@@ -7,6 +7,8 @@ Usage:
     app.layout = html2dash(Path("layout.html").read_text())
 
 """
+from __future__ import annotations
+from typing import Mapping
 from bs4 import BeautifulSoup, element, Comment
 from dash import html, dcc
 import re
@@ -33,7 +35,7 @@ ATTRIBUTE_MAP = {
 def html2dash(
     html_str: str,
     module_list: list | None = None,
-    element_map: dict[str, object] | None = None,
+    element_map: Mapping[str, object] | None = None,
     parent_div: bool = True,
     on_missing_element: str = "warn",
     on_missing_attribute: str = "warn",
@@ -91,7 +93,7 @@ def parse_element(tag: element.Tag, **settings) -> object:
             return text
         return None
     dash_element = None
-    for module in settings["module-list"]:
+    for module in settings.get("module-list", []):
         mapped_element = settings["element-map"].get(tag.name)
         if mapped_element is not None:
             dash_element = mapped_element
@@ -100,11 +102,11 @@ def parse_element(tag: element.Tag, **settings) -> object:
         elif hasattr(module, tag.name.title()):
             dash_element = getattr(module, tag.name.title())
     if not dash_element:
-        if settings["on-missing-element"] == "warn":
+        if settings.get("on-missing-element") == "warn":
             logger.warning(
                 f"Could not find the element '{tag.name}'" f" in any of the modules."
             )
-        elif settings["on-missing-element"] == "raise":
+        elif settings.get("on-missing-element") == "raise":
             raise ValueError(
                 f"Could not find the element '{tag.name}'" f" in any of the modules."
             )
@@ -125,13 +127,15 @@ def parse_element(tag: element.Tag, **settings) -> object:
             match = re.search(
                 r"received an unexpected keyword argument: `(.*)`", str(e)
             )
+            if match is None:
+                raise e
             attrs.pop(match.group(1))
             if settings["on-missing-attribute"] == "warn":
                 logger.warning(
                     f"Removed the attribute '{match.group(1)}' from the element '{tag.name}'"
                     f" because it was not valid."
                 )
-            elif settings["on-missing-attribute"] == "raise":
+            elif settings.get("on-missing-attribute") == "raise":
                 raise ValueError(
                     f"Unrecognized attribute '{match.group(1)}' in the element '{tag.name}'"
                 )
