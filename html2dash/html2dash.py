@@ -48,6 +48,7 @@ def html2dash(
             Defaults to [html, dcc].
         element_map (dict, optional): A dictionary mapping HTML elements to dash
             components. Defaults to {}.
+        parent_div (bool, optional): Whether to enclose the converted Dash components
         on_missing_element (str, optional): What to do when an element is not found.
             Defaults to "warn". Can be "warn", "raise", or "ignore".
         on_missing_attribute (str, optional): What to do when an attribute is not found.
