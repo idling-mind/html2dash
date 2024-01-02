@@ -11,6 +11,7 @@ following.
 - For larger layouts, the python code becomes very long and hard to read.
 - Sometimes I get the html form of a class (like pandas dataframe), but I
   cannot easily display that in dash.
+- Use html from markdown parsers
 - Cannot copy paste html code from examples on the web.
 - Cannot use tools like emmet to generate html code.
 
