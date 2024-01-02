@@ -57,7 +57,8 @@ def html2dash(
     Returns:
         html.Div: The converted Dash components enclosed inside a html.Div object.
     """
-    soup = BeautifulSoup(html_str, "xml")
+    html_str_iter = f"<body>{html_str}</body>"
+    soup = BeautifulSoup(html_str_iter, "xml")
     if soup.body is not None:
         soup = soup.body
     if module_list is None:
@@ -70,7 +71,7 @@ def html2dash(
         "on-missing-element": on_missing_element,
         "on-missing-attribute": on_missing_attribute,
     }
-    children = [parse_element(child, **settings) for child in soup.children]
+    children = [parse_element(child, **settings) for child in soup.children]  # type: ignore
     if parent_div:
         return html.Div(children=children)
     return children
@@ -98,10 +99,13 @@ def parse_element(tag: element.Tag, **settings) -> object:
         mapped_element = settings["element-map"].get(tag.name)
         if mapped_element is not None:
             dash_element = mapped_element
+            break
         elif hasattr(module, tag.name):
             dash_element = getattr(module, tag.name)
+            break
         elif hasattr(module, tag.name.title()):
             dash_element = getattr(module, tag.name.title())
+            break
     if not dash_element:
         if settings.get("on-missing-element") == "warn":
             logger.warning(
@@ -116,7 +120,7 @@ def parse_element(tag: element.Tag, **settings) -> object:
     attrs = fix_attrs(attrs)
     children = []
     for child in tag.children:
-        child_object = parse_element(child, **settings)
+        child_object = parse_element(child, **settings)  # type: ignore
         if child_object is not None:
             children.append(child_object)
     if children:
