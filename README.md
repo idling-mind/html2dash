@@ -107,15 +107,15 @@ The order in which `html2dash` searches for tags is:
 1. `dash.html`
 2. `dash.dcc`
 
-You can add additional component libraries to the module list as follows.
+You can change the list of modules that `html2dash` searches for tags by
+passing in `module_list` argument.
 
 ```python
-from html2dash import html2dash, settings
+from dash import Dash, html, dcc
+from html2dash import html2dash
 import dash_mantine_components as dmc
 
-# settings["modules"] is a list of modules to search for tags.
-# Default value is [html, dcc]
-settings["modules"].append(dmc)
+modules = [html, dcc, dmc]
 
 layout = html2dash("""
 <div>
@@ -126,27 +126,58 @@ layout = html2dash("""
         <Badge variant="outline">Outline</Badge>
     </div>
 </div>
-""")
+""", module_list=modules)
 ```
 
 You can also map html tags to dash components. For example, if you dont want to
 use `<icon>` tag, you can map it to `DashIconify` as follows.
 
 ```python
-from html2dash import html2dash, settings
+from html2dash import html2dash
 from dash_iconify import DashIconify
 
-settings["element-map"]["icon"] = DashIconify
+element_map = {"icon": DashIconify}
 
 layout = html2dash("""
 <div>
     <h1>Icon example</h1>
     <icon icon="mdi:home"/>
 </div>
-""")
+""", element_map=element_map)
 ```
 
-## Display a pandas dataframe in dash
+The `element_map` is a dictionary that maps html tags to dash components.
+The `element_map` will be searched first before searching in the `module_list`.
+
+The mapped component does not have to be a dash component. It can be any
+function that takes `children` and `**kwargs` as arguments and returns a dash
+component.
+
+```python
+from html2dash import html2dash
+
+def my_component(children, **kwargs):
+    return html.Div(children=children, **kwargs)
+
+element_map = {"my-component": my_component}
+
+layout = html2dash("""
+<div>
+    <h1>My component</h1>
+    <my-component id="my-component">
+        <h2>My component</h2>
+        <p>This is my component</p>
+    </my-component>
+
+    <my-component id="my-component-2">
+        <h2>My component 2</h2>
+        <p>This is my component 2</p>
+    </my-component>
+</div>
+""", element_map=element_map)
+```
+
+## Example usecase: Display a pandas dataframe in dash
 
 Since pandas dataframes come with a `to_html` method, you can easily display
 them in dash using `html2dash`.
@@ -164,15 +195,15 @@ do the following.
 
 ```python
 import pandas as pd
-from html2dash import html2dash, settings
+from html2dash import html2dash
 import dash_mantine_components as dmc
 
 # <table> would have been mapped to dash.html.Table
 # But, we want to use dmc.Table instead.
-settings["element-map"]["table"] = dmc.Table
+element_map = {"table": dmc.Table}
 
 df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
-layout = html2dash(df.to_html())
+layout = html2dash(df.to_html(), element_map=element_map)
 ```
 
 `html2dash` can handle multi-index dataframes as well.
@@ -182,8 +213,6 @@ import pandas as pd
 from html2dash import html2dash, settings
 import dash_mantine_components as dmc
 
-settings["element-map"]["table"] = dmc.Table
-
 df = pd.DataFrame(
     {
         ("a", "b"): [1, 2, 3],
@@ -191,7 +220,10 @@ df = pd.DataFrame(
         ("d", "e"): [7, 8, 9],
     }
 )
-layout = html2dash(df.to_html())
+
+element_map = {"table": dmc.Table}
+
+layout = html2dash(df.to_html(), element_map=element_map)
 ```
 
 ## Case sensitivity of html tags
