@@ -5,10 +5,20 @@ from html2dash import html2dash
 import dash_mantine_components as dmc
 from markdown_it import MarkdownIt
 from mdit_py_plugins.attrs.index import attrs_block_plugin, attrs_plugin
+from mdit_py_plugins.container.index import container_plugin
+from mdit_py_plugins.admon.index import admon_plugin
 from functools import partial
 from dash_iconify import DashIconify
 
-md = MarkdownIt().enable("table").use(attrs_block_plugin).use(attrs_plugin)
+md = (
+    MarkdownIt()
+    .enable("table")
+    .use(attrs_block_plugin)
+    .use(attrs_plugin)
+    .use(container_plugin, "container")
+    .use(container_plugin, "stack")
+    .use(admon_plugin)
+)
 h = md.render(
     """
 # Hello World
@@ -27,6 +37,7 @@ This is a paragraph.
 | John | 30  |
 | Jane | 28  |
 
+{#my-list}
 ## This is a list
 - Item 1
 - Item 2
@@ -49,8 +60,26 @@ if __name__ == "__main__":
 ## This is a horizontal rule
 ---
 
+{p=xl fluid=True}
+:::: container
+This is a container
+
+{align=center}
+::: stack
+Hello there
+
+Another paragraph
+:::
+::::
 """
 )
+
+def custom_div(children, **kwargs):
+    if "className" in kwargs and kwargs["className"] == "container":
+        return dmc.Container(children, **kwargs)
+    elif "className" in kwargs and kwargs["className"] == "stack":
+        return dmc.Stack(children, **kwargs)
+    return html.Div(children, **kwargs)
 
 modules = [dmc, html, dcc]
 
@@ -62,6 +91,7 @@ element_map = {
     "ul": partial(dmc.List, icon=dmc.ThemeIcon(DashIconify(icon="mdi:check"))),
     "li": dmc.ListItem,
     "code": dmc.Prism,
+    "div": custom_div,
 }
 
 app = Dash(__name__)
